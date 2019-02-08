@@ -33,12 +33,32 @@ func main() {
 		log.Fatalf("failed to create new schema, error: %v", err)
 	}
 
-	gHandler := handler.New(&handler.Config{
+	// apply middleware
+	h := func(inner http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			// some kind of authentication here
+
+			/*
+					  user := parseJwtUser(r)
+				      if !user.canDoGraphQL() {
+				        // do something to tell the user
+				        // ...
+				        // ...
+				        return
+				      }*/
+
+			// do normal graphql
+			key := "header"
+			innerCtx := context.WithValue(r.Context(), key, r.Header)
+			inner.ServeHTTP(w, r.WithContext(innerCtx))
+		})
+	}(handler.New(&handler.Config{
 		Schema:   &schema,
 		Pretty:   true,
 		GraphiQL: true,
-	})
-	http.Handle("/graphql", gHandler)
+	}))
+
+	http.Handle("/graphql", h)
 
 	fmt.Println("Now server is running on port 8080")
 	http.ListenAndServe(":8080", nil)
@@ -81,6 +101,11 @@ var graphqlGoQueryFieldsGetTemplate = `{{define "graphqlFieldsGet"}}{{range $key
 			{{end}}{{end}}
 		},
 		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+		        header := p.Context.Value("header").(http.Header)
+			for k, v := range header {
+				log.Println(k, v)
+			}
+
 			Query{{.Name}}Obj := {{.Name}}{}
 		{{range .Properties}}	{{if not .IsObjectType}}if val, ok := p.Args["{{.ScalarName}}"]; ok {
 				Query{{$value.Name}}Obj.{{.ScalarName | Title}} = {{$type := goType .ScalarType}}{{if eq .ScalarType  $type}}val.({{.ScalarType}}){{else}} {{.ScalarType}}(val.({{$type}})){{end}}
@@ -121,6 +146,11 @@ var graphqlGoMutationCreateTemplate = `{{define "graphqlFieldsCreate"}}{{range $
 			{{end}}{{end}}
 		},
 		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+		        header := p.Context.Value("header").(http.Header)
+			for k, v := range header {
+				log.Println(k, v)
+			}
+
 			Query{{.Name}}Obj := {{.Name}}{}
 		{{range .Properties}}	{{if and (not .IsObjectType)  (not (eq .ScalarName "id"))}}if val, ok := p.Args["{{.ScalarName}}"]; ok {
 				Query{{$value.Name}}Obj.{{.ScalarName | Title}} = {{$type := goType .ScalarType}}{{if eq .ScalarType  $type}}val.({{.ScalarType}}){{else}} {{.ScalarType}}(val.({{$type}})){{end}}
@@ -148,6 +178,11 @@ var graphqlGoMutationDeleteTemplate = `{{define "graphqlFieldsDelete"}}{{range $
 			{{end}}{{end}}
 		},
 		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+		header := p.Context.Value("header").(http.Header)
+			for k, v := range header {
+				log.Println(k, v)
+			}
+
 			Query{{.Name}}Obj := {{.Name}}{}
 		{{range .Properties}}	{{if not .IsObjectType}}if val, ok := p.Args["{{.ScalarName}}"]; ok {
 				Query{{$value.Name}}Obj.{{.ScalarName | Title}} = {{$type := goType .ScalarType}}{{if eq .ScalarType  $type}}val.({{.ScalarType}}){{else}} {{.ScalarType}}(val.({{$type}})){{end}}
@@ -175,6 +210,11 @@ var graphqlGoMutationUpdateTemplate = `{{define "graphqlFieldsUpdate"}}{{range $
 			{{end}}{{end}}
 		},
 		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+		header := p.Context.Value("header").(http.Header)
+			for k, v := range header {
+				log.Println(k, v)
+			}
+
 			Old{{.Name}}Obj := {{.Name}}{}
 			Query{{.Name}}Obj := {{.Name}}{}
 		{{range .Properties}}	{{if not .IsObjectType}}if val, ok := p.Args["{{.ScalarName}}"]; ok {
@@ -203,6 +243,11 @@ var graphqlGoQueryFieldsGetAllTemplate = `{{define "graphqlFieldsGetAll"}}{{rang
 			{{end}}{{end}}
 		},
 		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+		header := p.Context.Value("header").(http.Header)
+			for k, v := range header {
+				log.Println(k, v)
+			}
+
 			Query{{.Name}}Obj := {{.Name}}{}
 		{{range .Properties}}	{{if not .IsObjectType}}if val, ok := p.Args["{{.ScalarName}}"]; ok {
 				Query{{$value.Name}}Obj.{{.ScalarName | Title}} = {{$type := goType .ScalarType}}{{if eq .ScalarType  $type}}val.({{.ScalarType}}){{else}} {{.ScalarType}}(val.({{$type}})){{end}}
