@@ -17,7 +17,6 @@ func executeQuery(query string, schema graphql.Schema) *graphql.Result {
 var graphqlGoMainFunc = `
 var DB *gorm.DB
 
-
 func main() {
 
 	DB, _ = gorm.Open("{{.DbType}}","{{.ConnectionString}}")
@@ -84,7 +83,7 @@ var graphqlGoQueryFieldsGetTemplate = `{{define "graphqlFieldsGet"}}{{range $key
 		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 			Query{{.Name}}Obj := {{.Name}}{}
 		{{range .Properties}}	{{if not .IsObjectType}}if val, ok := p.Args["{{.ScalarName}}"]; ok {
-				Query{{$value.Name}}Obj.{{.ScalarName}} = {{$type := goType .ScalarType}}{{if eq .ScalarType  $type}}val.({{.ScalarType}}){{else}} {{.ScalarType}}(val.({{$type}})){{end}}
+				Query{{$value.Name}}Obj.{{.ScalarName | Title}} = {{$type := goType .ScalarType}}{{if eq .ScalarType  $type}}val.({{.ScalarType}}){{else}} {{.ScalarType}}(val.({{$type}})){{end}}
 			}
 		{{end}}{{end}}{{$name := .Name}}
 			var Result{{$name}}Obj {{.Name}}
@@ -116,23 +115,23 @@ var graphqlGoMutationCreateTemplate = `{{define "graphqlFieldsCreate"}}{{range $
 	MutationFields["Create{{.Name}}"] = &graphql.Field{
 		Type: {{.LowerName}}Type,
 		Args: graphql.FieldConfigArgument{
-			{{range .Properties}}{{if not .IsObjectType}}"{{.ScalarName}}": &graphql.ArgumentConfig{
+			{{range .Properties}}{{if and (not .IsObjectType)  (not (eq .ScalarName "id"))}}"{{.ScalarName}}": &graphql.ArgumentConfig{
 					Type: {{index .AltScalarType "graphql-go"}},
 			},
 			{{end}}{{end}}
 		},
 		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 			Query{{.Name}}Obj := {{.Name}}{}
-		{{range .Properties}}	{{if not .IsObjectType}}if val, ok := p.Args["{{.ScalarName}}"]; ok {
-				Query{{$value.Name}}Obj.{{.ScalarName}} = {{$type := goType .ScalarType}}{{if eq .ScalarType  $type}}val.({{.ScalarType}}){{else}} {{.ScalarType}}(val.({{$type}})){{end}}
+		{{range .Properties}}	{{if and (not .IsObjectType)  (not (eq .ScalarName "id"))}}if val, ok := p.Args["{{.ScalarName}}"]; ok {
+				Query{{$value.Name}}Obj.{{.ScalarName | Title}} = {{$type := goType .ScalarType}}{{if eq .ScalarType  $type}}val.({{.ScalarType}}){{else}} {{.ScalarType}}(val.({{$type}})){{end}}
 			}
 		{{end}}{{end}}
 			err := Create{{.Name}}(DB,Query{{.Name}}Obj)
 			var Result{{.Name}}Obj {{.Name}}
-			err = append(err,Get{{.Name}}(DB,Query{{.Name}}Obj,&Result{{.Name}}Obj)...)
+			err = append(err,GetLast{{.Name}}(DB,&Result{{.Name}}Obj)...)
 			if len(err) > 0 {
 				return Result{{.Name}}Obj, err[len(err)-1]
-			}
+			} 
 			return Result{{.Name}}Obj, nil
 		},
 	}
@@ -151,7 +150,7 @@ var graphqlGoMutationDeleteTemplate = `{{define "graphqlFieldsDelete"}}{{range $
 		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 			Query{{.Name}}Obj := {{.Name}}{}
 		{{range .Properties}}	{{if not .IsObjectType}}if val, ok := p.Args["{{.ScalarName}}"]; ok {
-				Query{{$value.Name}}Obj.{{.ScalarName}} = {{$type := goType .ScalarType}}{{if eq .ScalarType  $type}}val.({{.ScalarType}}){{else}} {{.ScalarType}}(val.({{$type}})){{end}}
+				Query{{$value.Name}}Obj.{{.ScalarName | Title}} = {{$type := goType .ScalarType}}{{if eq .ScalarType  $type}}val.({{.ScalarType}}){{else}} {{.ScalarType}}(val.({{$type}})){{end}}
 			}
 		{{end}}{{end}}
 			err := Delete{{.Name}}(DB,Query{{.Name}}Obj)
@@ -180,7 +179,7 @@ var graphqlGoMutationUpdateTemplate = `{{define "graphqlFieldsUpdate"}}{{range $
 			Query{{.Name}}Obj := {{.Name}}{}
 		{{range .Properties}}	{{if not .IsObjectType}}if val, ok := p.Args["{{.ScalarName}}"]; ok {
 				{{if or (eq $primaryKeyCol .ScalarName) (eq $primaryKeyColAlt .ScalarName)}}Old{{$value.Name}}Obj.{{.ScalarName}} = {{$type := goType .ScalarType}}{{if eq .ScalarType  $type}}val.({{.ScalarType}}){{else}} {{.ScalarType}}(val.({{$type}})){{end}}{{end}}
-				Query{{$value.Name}}Obj.{{.ScalarName}} = {{$type := goType .ScalarType}}{{if eq .ScalarType  $type}}val.({{.ScalarType}}){{else}} {{.ScalarType}}(val.({{$type}})){{end}}
+				Query{{$value.Name}}Obj.{{.ScalarName | Title}} = {{$type := goType .ScalarType}}{{if eq .ScalarType  $type}}val.({{.ScalarType}}){{else}} {{.ScalarType}}(val.({{$type}})){{end}}
 			}
 		{{end}}{{end}}
 			var Result{{.Name}}Obj {{.Name}}
@@ -206,7 +205,7 @@ var graphqlGoQueryFieldsGetAllTemplate = `{{define "graphqlFieldsGetAll"}}{{rang
 		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 			Query{{.Name}}Obj := {{.Name}}{}
 		{{range .Properties}}	{{if not .IsObjectType}}if val, ok := p.Args["{{.ScalarName}}"]; ok {
-				Query{{$value.Name}}Obj.{{.ScalarName}} = {{$type := goType .ScalarType}}{{if eq .ScalarType  $type}}val.({{.ScalarType}}){{else}} {{.ScalarType}}(val.({{$type}})){{end}}
+				Query{{$value.Name}}Obj.{{.ScalarName | Title}} = {{$type := goType .ScalarType}}{{if eq .ScalarType  $type}}val.({{.ScalarType}}){{else}} {{.ScalarType}}(val.({{$type}})){{end}}
 			}
 		{{end}}{{end}}{{$name := .Name}}
 			var Result{{$name}}Obj []{{.Name}}

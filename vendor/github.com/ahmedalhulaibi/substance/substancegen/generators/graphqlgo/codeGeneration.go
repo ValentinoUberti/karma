@@ -94,6 +94,7 @@ to retrieve the first element of each object type (and its associations) from a 
 func GenGraphqlGoFieldsFunc(gqlObjectTypes map[string]substancegen.GenObjectType, buff *bytes.Buffer) {
 	funcMap := template.FuncMap{
 		"goType": GetGoNumericAliasType,
+		"Title" : strings.Title,
 	}
 	tmpl := template.New("graphqlFields").Funcs(funcMap)
 	tmpl, err := tmpl.Parse(strings.Join([]string{graphqlGoFieldsQueryTemplate, graphqlGoQueryFieldsGetTemplate, graphqlGoQueryFieldsGetAllTemplate}, ""))
@@ -170,6 +171,7 @@ to retrieve the first element of each object type (and its associations) from a 
 func GenGraphqlGoFieldsGetFunc(gqlObjectTypes map[string]substancegen.GenObjectType, buff *bytes.Buffer) {
 	funcMap := template.FuncMap{
 		"goType": GetGoNumericAliasType,
+		"Title" : strings.Title,
 	}
 	tmpl := template.New("graphqlFieldsGet").Funcs(funcMap)
 
@@ -191,6 +193,7 @@ func GenGraphqlGoMutationsFunc(gqlObjectTypes map[string]substancegen.GenObjectT
 	funcMap := template.FuncMap{
 		"goType":     GetGoNumericAliasType,
 		"getPkeyCol": substancegen.SearchForKeyColumnByKeyType,
+		"Title" : strings.Title,
 	}
 	tmpl := template.New("graphqlGoFieldsMutation").Funcs(funcMap)
 	tmpl, err := tmpl.Parse(strings.Join([]string{graphqlGoFieldsMutationTemplate, graphqlGoMutationCreateTemplate, graphqlGoMutationDeleteTemplate, graphqlGoMutationUpdateTemplate}, ""))
@@ -210,6 +213,7 @@ to create an object and add it to a database*/
 func GenGraphqlGoFieldsCreateFunc(gqlObjectTypes map[string]substancegen.GenObjectType, buff *bytes.Buffer) {
 	funcMap := template.FuncMap{
 		"goType": GetGoNumericAliasType,
+		"Title" : strings.Title,
 	}
 	tmpl := template.New("graphqlFieldsCreate").Funcs(funcMap)
 
@@ -230,6 +234,7 @@ to delete an object and add it to a database*/
 func GenGraphqlGoFieldsDeleteFunc(gqlObjectTypes map[string]substancegen.GenObjectType, buff *bytes.Buffer) {
 	funcMap := template.FuncMap{
 		"goType": GetGoNumericAliasType,
+		"Title" : strings.Title,
 	}
 	tmpl := template.New("graphqlFieldsDelete").Funcs(funcMap)
 
@@ -251,6 +256,7 @@ func GenGraphqlGoFieldsUpdateFunc(gqlObjectTypes map[string]substancegen.GenObje
 	funcMap := template.FuncMap{
 		"goType":     GetGoNumericAliasType,
 		"getPkeyCol": substancegen.SearchForKeyColumnByKeyType,
+		"Title" : strings.Title,
 	}
 	tmpl := template.New("graphqlFieldsUpdate").Funcs(funcMap)
 
@@ -271,6 +277,7 @@ to retrieve all elements of each object type (does not retrieve its associations
 func GenGraphqlGoFieldsGetAllFunc(gqlObjectTypes map[string]substancegen.GenObjectType, buff *bytes.Buffer) {
 	funcMap := template.FuncMap{
 		"goType": GetGoNumericAliasType,
+		"Title" : strings.Title,
 	}
 	tmpl := template.New("graphqlFieldsGetAll").Funcs(funcMap)
 

@@ -29,6 +29,7 @@ func GenGormObjectTableNameOverrideFunc(gqlObjectType substancegen.GenObjectType
 /*GenObjectGormCreateFunc generates functions for basic CRUD Create using gorm and writes it to a buffer*/
 func GenObjectGormCreateFunc(gqlObjectType substancegen.GenObjectType, buff *bytes.Buffer) {
 	gormCreateFuncTemplate := "\n\nfunc Create{{.Name}} (db *gorm.DB, new{{.Name}} {{.Name}}) []error {\n\treturn db.Create(&new{{.Name}}).GetErrors()\n}"
+	gormCreateFuncTemplate +="\n\nfunc GetLast{{.Name}} (db *gorm.DB, new{{.Name}} *{{.Name}}) []error {\n\treturn db.Last(new{{.Name}}).GetErrors()\n}"
 	tmpl := template.New("gormCreateFunc")
 	tmpl, err := tmpl.Parse(gormCreateFuncTemplate)
 	if err != nil {
