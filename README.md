@@ -1,33 +1,21 @@
-# Graphqlator CLI
+# This project is a fork of Graphqlator CLI
 __*This project is a WIP.*__
-# Master branch is currently unstable.
+# 
 
 Graphqlator takes your existing database schema and generates code for a GraphQL-Go server. Type 'graphqlator help' to see usage.
-
-## Status
-
-| Build                             | Report card                           |
-| :-------------------------------: | :-----------------------------------: |
-| [![Build][build-badge]][build-link] | [![Report card][rc-badge]][rc-link]   |
-
-[build-badge]: https://travis-ci.org/ahmedalhulaibi/graphqlator.svg?branch=master "Travis-CI build status"
-[build-link]: https://travis-ci.org/ahmedalhulaibi/graphqlator "Travis-CI build status link"
-[rc-badge]: https://goreportcard.com/badge/github.com/ahmedalhulaibi/graphqlator "Report card status"
-[rc-link]: https://goreportcard.com/report/github.com/ahmedalhulaibi/graphqlator "Report card status"
 
 ## Supported Data Stores:
 
 - mysql
+- mariadb
 - mariadb
 - postgres
 
 ## Installation:
 
 ```
-go get github.com/ahmedalhulaibi/graphqlator
+go get github.com/ValentinoUberti/karma
 ```
-
-Or Download prebuilt binaries from the [releases page](https://github.com/ahmedalhulaibi/go-graphqlator-cli/releases)
 
 ## Prerequisites
 
