@@ -1,5 +1,134 @@
 package graphqlgo
 
+var b="`"
+
+var JwtUtilities =`
+
+package main
+
+import (
+	"encoding/json"
+	"errors"
+	"log"
+	"net/http"
+
+	_ "github.com/jinzhu/gorm/dialects/mysql"
+	"github.com/mitchellh/mapstructure"
+
+	jwt "github.com/dgrijalva/jwt-go"
+)
+
+var jwtSecret []byte = []byte("thepolyglotdeveloper")
+
+func checkHeaderJwtToken(header http.Header) error {
+
+	if t, ok := header["Token"]; ok {
+		token := t[0]
+		result, validationErr := ValidateJWT(token)
+
+		if validationErr != nil {
+			return errors.New("Invalid Jwt token")
+		}
+
+		log.Println("Found valid jwt token :", result)
+		return nil
+
+	} else {
+		return errors.New("Jwt token not found")
+
+	}
+
+}
+
+
+
+type UserForToken struct {
+	Username string `+b+`json:"username"`+b+`
+	Password string `+b+`json:"password"`+b+`
+}
+
+func ValidateJWT(t string) (interface{}, error) {
+	if t == "" {
+		return nil, errors.New("Authorization token must be present")
+	}
+	token, _ := jwt.Parse(t, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, errors.New("There was an error")
+		}
+		return jwtSecret, nil
+	})
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		var decodedToken interface{}
+		mapstructure.Decode(claims, &decodedToken)
+		return decodedToken, nil
+	} else {
+		return nil, errors.New("Invalid authorization token")
+	}
+}
+
+func CreateTokenEndpoint(response http.ResponseWriter, request *http.Request) {
+	var user UserForToken
+	log.Println(request.Body)
+	errDecode := json.NewDecoder(request.Body).Decode(&user)
+
+	if errDecode != nil {
+		var tokenString string
+		response.Header().Set("content-type", "application/json")
+		response.Write([]byte(`+b+`{ "token": "`+b+`+ tokenString +`+b+`"}`+b+`))
+		log.Println("User and pass not provided")
+		return
+	}
+
+	log.Println(user)
+	QueryUserObj := User{}
+	QueryUserObj.Username = user.Username
+	QueryUserObj.Password = user.Password
+
+	var ResultUserObj User
+
+	err := GetUser(DB, QueryUserObj, &ResultUserObj)
+
+	log.Println("Error :", err)
+	if len(err) > 0 {
+		log.Println(err)
+		var tokenString string
+		response.Header().Set("content-type", "application/json")
+		response.Write([]byte(`+b+`{ "token": "`+b+`+ tokenString +`+b+`"}`+b+`))
+		log.Println("User and pass dosent match")
+		return
+
+	}
+
+	log.Println(ResultUserObj)
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"username": user.Username,
+		"password": user.Password,
+	})
+
+	tokenString, error := token.SignedString(jwtSecret)
+	if error != nil {
+		response.Header().Set("content-type", "application/json")
+		response.Write([]byte(`+b+`{ "token": "`+b+`+ tokenString +`+b+`"}`+b+`))
+		log.Println("Error signin token")
+		log.Println(error)
+	}
+	byteToken :=[]byte(`+b+`{ "token": "`+b+`+ tokenString +`+b+`"}`+b+`)
+	response.Header().Set("content-type", "application/json")
+	response.Write(byteToken)
+
+	result, validationErr := ValidateJWT(tokenString)
+	if validationErr != nil {
+		log.Println(validationErr)
+	} else {
+		log.Println("Validation ok in request login")
+		log.Println(result)
+	}
+}
+
+`
+
+
 /*GraphqlGoExecuteQueryFunc boilerplate string for graphql-go function to execute a graphql query*/
 var GraphqlGoExecuteQueryFunc = `
 func executeQuery(query string, schema graphql.Schema) *graphql.Result {
@@ -38,15 +167,6 @@ func main() {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			// some kind of authentication here
 
-			/*
-					  user := parseJwtUser(r)
-				      if !user.canDoGraphQL() {
-				        // do something to tell the user
-				        // ...
-				        // ...
-				        return
-				      }*/
-
 			// do normal graphql
 			key := "header"
 			innerCtx := context.WithValue(r.Context(), key, r.Header)
@@ -59,6 +179,7 @@ func main() {
 	}))
 
 	http.Handle("/graphql", h)
+	http.HandleFunc("/login", CreateTokenEndpoint)
 
 	fmt.Println("Now server is running on port 8080")
 	http.ListenAndServe(":8080", nil)
@@ -101,9 +222,12 @@ var graphqlGoQueryFieldsGetTemplate = `{{define "graphqlFieldsGet"}}{{range $key
 			{{end}}{{end}}
 		},
 		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-		        header := p.Context.Value("header").(http.Header)
-			for k, v := range header {
-				log.Println(k, v)
+		       header := p.Context.Value("header").(http.Header)
+			validationError := checkHeaderJwtToken(header)
+			if validationError != nil {
+
+				return nil, validationError
+
 			}
 
 			Query{{.Name}}Obj := {{.Name}}{}
@@ -146,9 +270,13 @@ var graphqlGoMutationCreateTemplate = `{{define "graphqlFieldsCreate"}}{{range $
 			{{end}}{{end}}
 		},
 		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-		        header := p.Context.Value("header").(http.Header)
-			for k, v := range header {
-				log.Println(k, v)
+		       
+		       header := p.Context.Value("header").(http.Header)
+		       validationError := checkHeaderJwtToken(header)
+		       if validationError != nil {
+
+				return nil, validationError
+
 			}
 
 			Query{{.Name}}Obj := {{.Name}}{}
@@ -179,8 +307,11 @@ var graphqlGoMutationDeleteTemplate = `{{define "graphqlFieldsDelete"}}{{range $
 		},
 		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 		header := p.Context.Value("header").(http.Header)
-			for k, v := range header {
-				log.Println(k, v)
+			validationError := checkHeaderJwtToken(header)
+			if validationError != nil {
+
+				return nil, validationError
+
 			}
 
 			Query{{.Name}}Obj := {{.Name}}{}
@@ -211,8 +342,11 @@ var graphqlGoMutationUpdateTemplate = `{{define "graphqlFieldsUpdate"}}{{range $
 		},
 		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 		header := p.Context.Value("header").(http.Header)
-			for k, v := range header {
-				log.Println(k, v)
+			validationError := checkHeaderJwtToken(header)
+			if validationError != nil {
+
+				return nil, validationError
+
 			}
 
 			Old{{.Name}}Obj := {{.Name}}{}
@@ -243,9 +377,14 @@ var graphqlGoQueryFieldsGetAllTemplate = `{{define "graphqlFieldsGetAll"}}{{rang
 			{{end}}{{end}}
 		},
 		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+		
+		//Jwt token checker
 		header := p.Context.Value("header").(http.Header)
-			for k, v := range header {
-				log.Println(k, v)
+			validationError := checkHeaderJwtToken(header)
+			if validationError != nil {
+
+				return nil, validationError
+
 			}
 
 			Query{{.Name}}Obj := {{.Name}}{}

@@ -67,6 +67,16 @@ Run 'graphqlator init' before running 'graphqlator generate'`,
 					fmt.Println(err.Error())
 				}
 				mainFile.Close()
+				
+				jwtUtilitiesFile :=createFile("jwtUtilities.go",true)
+				var jwtUtilitiesFileBuffer bytes.Buffer
+				jwtUtilitiesFileBuffer.WriteString(graphqlgo.JwtUtilities)
+				_, err = jwtUtilitiesFile.Write(jwtUtilitiesFileBuffer.Bytes())
+				if err != nil {
+					fmt.Println(err.Error())
+				}
+				jwtUtilitiesFile.Close()
+				
 			}
 
 			if updateGqlTypes || updateAll {

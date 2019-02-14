@@ -5,6 +5,7 @@ import (
 	"log"
 	"sort"
 	"text/template"
+	
 
 	"github.com/ahmedalhulaibi/substance/substancegen"
 )
@@ -93,8 +94,33 @@ func GenObjectGormUpdateFunc(gqlObjectType substancegen.GenObjectType, buff *byt
 	}
 
 	if keyColumn == "" {
-		log.Printf("No primary or unique key column found for object %s. Skipping Gorm update func.\n", gqlObjectType.Name)
+		log.Printf("No primary or unique key column found for object %s. Skipping Gorm update func.\nWriting useless update function\n", gqlObjectType.Name)
+		gormUpdateFuncTemplate := "\n\nfunc Update{{.Name}} (db *gorm.DB, old{{.Name}} {{.Name}}, new{{.Name}} {{.Name}}, result{{.Name}} *{{.Name}}) []error {\n\tvar err []error\n\t err=append(err,errors.New('Cannot update a view'))\n\treturn err}"
+	
+	var templateData = struct {
+		Name string
+		Key  string
+	}{
+		gqlObjectType.Name,
+		keyColumn,
+	}
+	
+	tmpl := template.New("gormUpdateFunc")
+	tmpl, err := tmpl.Parse(gormUpdateFuncTemplate)
+	
+	
+	if err != nil {
+		log.Fatal("Parse: ", err)
 		return
+	}
+	err1 := tmpl.Execute(buff, templateData)
+	if err1 != nil {
+		log.Fatal("Execute: ", err1)
+		return
+	}
+	
+	return
+	
 	}
 
 	var templateData = struct {
