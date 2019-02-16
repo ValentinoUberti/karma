@@ -1,8 +1,8 @@
 package graphqlgo
 
-var b="`"
+var b = "`"
 
-var JwtUtilities =`
+var JwtUtilities = `
 
 package main
 
@@ -19,6 +19,7 @@ import (
 )
 
 var jwtSecret []byte = []byte("thepolyglotdeveloper")
+
 
 func checkHeaderJwtToken(header http.Header) error {
 
@@ -43,8 +44,8 @@ func checkHeaderJwtToken(header http.Header) error {
 
 
 type UserForToken struct {
-	Username string `+b+`json:"username"`+b+`
-	Password string `+b+`json:"password"`+b+`
+	Username string ` + b + `json:"username"` + b + `
+	Password string ` + b + `json:"password"` + b + `
 }
 
 func ValidateJWT(t string) (interface{}, error) {
@@ -66,7 +67,15 @@ func ValidateJWT(t string) (interface{}, error) {
 	}
 }
 
+
+func enableCors(w *http.ResponseWriter) {
+	(*w).Header().Set("Access-Control-Allow-Origin", "*")
+	(*w).Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+	(*w).Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+}
+
 func CreateTokenEndpoint(response http.ResponseWriter, request *http.Request) {
+	enableCors(&response)
 	var user UserForToken
 	log.Println(request.Body)
 	errDecode := json.NewDecoder(request.Body).Decode(&user)
@@ -74,7 +83,7 @@ func CreateTokenEndpoint(response http.ResponseWriter, request *http.Request) {
 	if errDecode != nil {
 		var tokenString string
 		response.Header().Set("content-type", "application/json")
-		response.Write([]byte(`+b+`{ "token": "`+b+`+ tokenString +`+b+`"}`+b+`))
+		response.Write([]byte(` + b + `{ "token": "` + b + `+ tokenString +` + b + `"}` + b + `))
 		log.Println("User and pass not provided")
 		return
 	}
@@ -93,7 +102,7 @@ func CreateTokenEndpoint(response http.ResponseWriter, request *http.Request) {
 		log.Println(err)
 		var tokenString string
 		response.Header().Set("content-type", "application/json")
-		response.Write([]byte(`+b+`{ "token": "`+b+`+ tokenString +`+b+`"}`+b+`))
+		response.Write([]byte(` + b + `{ "token": "` + b + `+ tokenString +` + b + `"}` + b + `))
 		log.Println("User and pass dosent match")
 		return
 
@@ -109,11 +118,11 @@ func CreateTokenEndpoint(response http.ResponseWriter, request *http.Request) {
 	tokenString, error := token.SignedString(jwtSecret)
 	if error != nil {
 		response.Header().Set("content-type", "application/json")
-		response.Write([]byte(`+b+`{ "token": "`+b+`+ tokenString +`+b+`"}`+b+`))
+		response.Write([]byte(` + b + `{ "token": "` + b + `+ tokenString +` + b + `"}` + b + `))
 		log.Println("Error signin token")
 		log.Println(error)
 	}
-	byteToken :=[]byte(`+b+`{ "token": "`+b+`+ tokenString +`+b+`"}`+b+`)
+	byteToken :=[]byte(` + b + `{ "token": "` + b + `+ tokenString +` + b + `"}` + b + `)
 	response.Header().Set("content-type", "application/json")
 	response.Write(byteToken)
 
@@ -127,7 +136,6 @@ func CreateTokenEndpoint(response http.ResponseWriter, request *http.Request) {
 }
 
 `
-
 
 /*GraphqlGoExecuteQueryFunc boilerplate string for graphql-go function to execute a graphql query*/
 var GraphqlGoExecuteQueryFunc = `
