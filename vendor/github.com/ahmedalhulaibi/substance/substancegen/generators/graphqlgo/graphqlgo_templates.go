@@ -219,6 +219,7 @@ func main() {
 	h := func(inner http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			// some kind of authentication here
+			enableCors(&w)
 
 			// do normal graphql
 			key := "header"
