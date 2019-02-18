@@ -87,6 +87,14 @@ func CreateTokenEndpoint(response http.ResponseWriter, request *http.Request) {
 		log.Println("User and pass not provided")
 		return
 	}
+	
+	if len(user.Password) < 1 || len(user.Username) < 1 {
+		var tokenString string
+		response.Header().Set("content-type", "application/json")
+		response.Write([]byte(` + b + `{ "token": "` + b + `+ tokenString +` + b + `"}` + b + `))
+		log.Println("User and pass not provided")
+		return
+	}
 
 	log.Println(user)
 	QueryUserObj := User{}
@@ -122,16 +130,53 @@ func CreateTokenEndpoint(response http.ResponseWriter, request *http.Request) {
 		log.Println("Error signin token")
 		log.Println(error)
 	}
-	byteToken :=[]byte(` + b + `{ "token": "` + b + `+ tokenString +` + b + `"}` + b + `)
-	response.Header().Set("content-type", "application/json")
-	response.Write(byteToken)
+	
 
 	result, validationErr := ValidateJWT(tokenString)
 	if validationErr != nil {
+
+                tokenString = ""
+				byteToken :=[]byte(` + b + `{ "token": "` + b + `+ tokenString +` + b + `"}` + b + `)
+				response.Header().Set("content-type", "application/json")
+				response.Write(byteToken)
+
+
 		log.Println(validationErr)
 	} else {
-		log.Println("Validation ok in request login")
-		log.Println(result)
+		
+			log.Println("Validation ok in request login")
+			log.Println(result)
+			UpdateUserObj := User{}
+			//copier.Copy(ResultUserObj, UpdateUserObj)
+	        if ResultUserObj.Token != tokenString {
+
+			UpdateUserObj = ResultUserObj
+			UpdateUserObj.Token = tokenString
+			var Result User
+			log.Println(ResultUserObj, UpdateUserObj)
+	
+			err = UpdateUser(DB, ResultUserObj, UpdateUserObj, &Result)
+			log.Println(Result)
+			if len(err) > 0 {
+	
+				tokenString = ""
+				byteToken :=[]byte(` + b + `{ "token": "` + b + `+ tokenString +` + b + `"}` + b + `)
+				response.Header().Set("content-type", "application/json")
+				response.Write(byteToken)
+				log.Println("Error updating token")
+				log.Println(error)
+			} else {
+				byteToken :=[]byte(` + b + `{ "token": "` + b + `+ tokenString +` + b + `"}` + b + `)
+				response.Header().Set("content-type", "application/json")
+				response.Write(byteToken)
+			}
+	
+			} else {
+				byteToken :=[]byte(` + b + `{ "token": "` + b + `+ tokenString +` + b + `"}` + b + `)
+				response.Header().Set("content-type", "application/json")
+				response.Write(byteToken)
+			} // token is different
+
 	}
 }
 
