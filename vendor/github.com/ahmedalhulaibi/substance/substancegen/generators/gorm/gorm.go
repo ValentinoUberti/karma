@@ -5,7 +5,6 @@ import (
 	"log"
 	"sort"
 	"text/template"
-	
 
 	"github.com/ahmedalhulaibi/substance/substancegen"
 )
@@ -30,7 +29,7 @@ func GenGormObjectTableNameOverrideFunc(gqlObjectType substancegen.GenObjectType
 /*GenObjectGormCreateFunc generates functions for basic CRUD Create using gorm and writes it to a buffer*/
 func GenObjectGormCreateFunc(gqlObjectType substancegen.GenObjectType, buff *bytes.Buffer) {
 	gormCreateFuncTemplate := "\n\nfunc Create{{.Name}} (db *gorm.DB, new{{.Name}} {{.Name}}) []error {\n\treturn db.Create(&new{{.Name}}).GetErrors()\n}"
-	gormCreateFuncTemplate +="\n\nfunc GetLast{{.Name}} (db *gorm.DB, new{{.Name}} *{{.Name}}) []error {\n\treturn db.Last(new{{.Name}}).GetErrors()\n}"
+	gormCreateFuncTemplate += "\n\nfunc GetLast{{.Name}} (db *gorm.DB, new{{.Name}} *{{.Name}}) []error {\n\treturn db.Last(new{{.Name}}).GetErrors()\n}"
 	tmpl := template.New("gormCreateFunc")
 	tmpl, err := tmpl.Parse(gormCreateFuncTemplate)
 	if err != nil {
@@ -96,31 +95,30 @@ func GenObjectGormUpdateFunc(gqlObjectType substancegen.GenObjectType, buff *byt
 	if keyColumn == "" {
 		log.Printf("No primary or unique key column found for object %s. Skipping Gorm update func.\nWriting useless update function\n", gqlObjectType.Name)
 		gormUpdateFuncTemplate := "\n\nfunc Update{{.Name}} (db *gorm.DB, old{{.Name}} {{.Name}}, new{{.Name}} {{.Name}}, result{{.Name}} *{{.Name}}) []error {\n\tvar err []error\n\t err=append(err,errors.New('Cannot update a view'))\n\treturn err}"
-	
-	var templateData = struct {
-		Name string
-		Key  string
-	}{
-		gqlObjectType.Name,
-		keyColumn,
-	}
-	
-	tmpl := template.New("gormUpdateFunc")
-	tmpl, err := tmpl.Parse(gormUpdateFuncTemplate)
-	
-	
-	if err != nil {
-		log.Fatal("Parse: ", err)
+
+		var templateData = struct {
+			Name string
+			Key  string
+		}{
+			gqlObjectType.Name,
+			keyColumn,
+		}
+
+		tmpl := template.New("gormUpdateFunc")
+		tmpl, err := tmpl.Parse(gormUpdateFuncTemplate)
+
+		if err != nil {
+			log.Fatal("Parse: ", err)
+			return
+		}
+		err1 := tmpl.Execute(buff, templateData)
+		if err1 != nil {
+			log.Fatal("Execute: ", err1)
+			return
+		}
+
 		return
-	}
-	err1 := tmpl.Execute(buff, templateData)
-	if err1 != nil {
-		log.Fatal("Execute: ", err1)
-		return
-	}
-	
-	return
-	
+
 	}
 
 	var templateData = struct {
@@ -131,7 +129,7 @@ func GenObjectGormUpdateFunc(gqlObjectType substancegen.GenObjectType, buff *byt
 		keyColumn,
 	}
 
-	gormUpdateFuncTemplate := "\n\nfunc Update{{.Name}} (db *gorm.DB, old{{.Name}} {{.Name}}, new{{.Name}} {{.Name}}, result{{.Name}} *{{.Name}}) []error {\n\tvar oldResult{{.Name}} {{.Name}}\n\terr := db.Where(&old{{.Name}}).First(&oldResult{{.Name}}).GetErrors()\n\tif oldResult{{.Name}}.{{.Key}} == new{{.Name}}.{{.Key}} {\n\t\toldResult{{.Name}} = new{{.Name}}\n\t\terr = append(err,db.Save(oldResult{{.Name}}).GetErrors()...)\n\t}\n\terr = append(err,Get{{.Name}}(db, new{{.Name}}, result{{.Name}})...)\n\treturn err\n}"
+	gormUpdateFuncTemplate := "\n\nfunc Update{{.Name}} (db *gorm.DB, old{{.Name}} {{.Name}}, new{{.Name}} {{.Name}}, result{{.Name}} *{{.Name}}) []error {\n\terr := db.Model(&old{{.Name}}).Updates(new{{.Name}}).GetErrors()\n\terr = append(err,Get{{.Name}}(db, new{{.Name}}, result{{.Name}})...)\n\treturn err\n}"
 	tmpl := template.New("gormUpdateFunc")
 	tmpl, err := tmpl.Parse(gormUpdateFuncTemplate)
 	if err != nil {

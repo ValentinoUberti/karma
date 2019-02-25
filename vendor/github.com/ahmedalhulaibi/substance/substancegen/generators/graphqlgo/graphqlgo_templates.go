@@ -23,7 +23,7 @@ var jwtSecret []byte = []byte("thepolyglotdeveloper")
 
 func checkHeaderJwtToken(header http.Header) error {
 
-	if t, ok := header["Token"]; ok {
+	if t, ok := header["Authorization"]; ok {
 		token := t[0]
 		result, validationErr := ValidateJWT(token)
 
@@ -49,7 +49,7 @@ type UserForToken struct {
 }
 
 func ValidateJWT(t string) (interface{}, error) {
-	if t == "" {
+	if t == "" || t == "null" {
 		return nil, errors.New("Authorization token must be present")
 	}
 	token, _ := jwt.Parse(t, func(token *jwt.Token) (interface{}, error) {
