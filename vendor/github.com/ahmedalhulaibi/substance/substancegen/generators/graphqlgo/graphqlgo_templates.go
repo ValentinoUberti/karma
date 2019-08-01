@@ -375,7 +375,7 @@ var graphqlGoMutationDeleteTemplate = `{{define "graphqlFieldsDelete"}}{{range $
 		{{end}}{{end}}
 			err := Delete{{.Name}}(DB,Query{{.Name}}Obj)
 			var Result{{.Name}}Obj {{.Name}}
-			err = append(err,Get{{.Name}}(DB,Query{{.Name}}Obj,&Result{{.Name}}Obj)...)
+			//err = append(err,Get{{.Name}}(DB,Query{{.Name}}Obj,&Result{{.Name}}Obj)...)
 			if len(err) > 0 {
 				return Result{{.Name}}Obj, err[len(err)-1]
 			}
