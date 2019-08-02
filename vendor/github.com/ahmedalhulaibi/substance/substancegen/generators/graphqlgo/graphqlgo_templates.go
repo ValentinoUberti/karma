@@ -11,6 +11,7 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"strconv"
 
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 	"github.com/mitchellh/mapstructure"
@@ -166,13 +167,18 @@ func CreateTokenEndpoint(response http.ResponseWriter, request *http.Request) {
 				log.Println("Error updating token")
 				log.Println(error)
 			} else {
-				byteToken :=[]byte(` + b + `{ "token": "` + b + `+ tokenString +` + b + `"}` + b + `)
+				userid :=strconv.Itoa(int(ResultUserObj.Id))
+
+				byteToken :=[]byte(` + b + `{ "token": "` + b + `+ tokenString +` + b + `","userid": "` + b + `+ userid + ` + b + `"}` + b + `)
 				response.Header().Set("content-type", "application/json")
 				response.Write(byteToken)
 			}
 	
 			} else {
-				byteToken :=[]byte(` + b + `{ "token": "` + b + `+ tokenString +` + b + `"}` + b + `)
+				userid :=strconv.Itoa(int(ResultUserObj.Id))
+				//byteToken :=[]byte(` + b + `{ "token": "` + b + `+ tokenString +` + b + `"}` + b + `)
+				byteToken :=[]byte(` + b + `{ "token": "` + b + `+ tokenString +` + b + `","userid": "` + b + `+ userid + ` + b + `"}` + b + `)
+				
 				response.Header().Set("content-type", "application/json")
 				response.Write(byteToken)
 			} // token is different
